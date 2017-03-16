@@ -1,6 +1,9 @@
 package com.proj.forummatrix.utilities;
 
+import com.proj.forummatrix.main.PostAnalysis;
 import com.proj.forummatrix.model.Connect;
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -11,6 +14,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -62,19 +66,37 @@ public class IOReadWrite {
      * Write the feature vector of a user in a file
      *
      * @param filePath
-     * @param toWrite
-     * @throws IOException
+     * @param characters
+     * @param digits_punc
      */
-    public static void createFileWithHeader(String filePath) throws IOException {
-//        String fileName = IOProperties.NON_RAD_TWEET_FEATURE_VECTOR_FILE;
-//        String fileName = IOProperties.USER_FEATURE_VECTOR_FILE;
+    public static void createFileWithHeader(String filePath, char[] characters, char[] digits_punc) {
+        try {
+            System.out.println("Creating header file.....");
+            String[] wordLengthHeader = {"wordLenght1", "wordLenght2", "wordLenght3", "wordLenght4",
+                "wordLenght5", "wordLenght6", "wordLenght7", "wordLenght8", "wordLenght9", "wordLenght10",
+                "wordLenght11", "wordLenght12", "wordLenght13", "wordLenght14", "wordLenght15", "wordLenght16",
+                "wordLenght17", "wordLenght18", "wordLenght19", "wordLenght20"};
 
-//        String fileName = IOProperties.ENG_TWEET_FEATURE_VECTOR_FILE;
-//        String fileName = IOProperties.ENG_USER_FEATURE_VECTOR_FILE;
-        try (FileWriter fw = new FileWriter(filePath) //the true will append the new data
-                ) {
-//            String toWrite = 
-//            fw.write(toWrite);//appends the string to the file
+            String[] alphabhatesHeader = Arrays.toString(characters).split(",");
+            String[] digits_puncHeader = Arrays.toString(digits_punc).split(",");
+
+            String[] wordsHeader = PostAnalysis.bigramWords.toArray(new String[0]);
+            String[] letterHeader = PostAnalysis.bigramLetters.toArray(new String[0]);
+            String[] frequentHeader = PostAnalysis.mostFreqWords.toArray(new String[0]);
+
+            int arraySize = wordLengthHeader.length + alphabhatesHeader.length + digits_puncHeader.length
+                    + wordsHeader.length + letterHeader.length + frequentHeader.length;
+
+            String[] header = new String[arraySize];
+
+            header = concatArrays(wordLengthHeader, alphabhatesHeader, digits_puncHeader, wordsHeader, letterHeader, frequentHeader);
+            ArrayList<String> headerList = new ArrayList<>(Arrays.asList(header));
+            headerList.add(0, "User");
+            headerList.add("Class");
+
+            writeIntoFile(headerList, filePath);
+        } catch (IOException ex) {
+            Logger.getLogger(IOReadWrite.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -114,10 +136,18 @@ public class IOReadWrite {
      * @param fileName
      * @throws IOException
      */
-    public static void writeToFile(String toWrite, String fileName) throws IOException {
+    public static void writeToFile(String toWrite, String fileName) {
 //        fileName = IOProperties.NEW_RADICAL_USER_FILEPATH + fileName + ".txt";
         try (FileWriter fw = new FileWriter(fileName, true)) {
             fw.write(toWrite + "\n");
+        } catch (IOException ex) {
+            Logger.getLogger(IOReadWrite.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public static void writeIntoFile(List<String> featCount, String filename) throws IOException {
+        try (FileWriter fw = new FileWriter(filename, true)) {
+            fw.write(featCount.toString().replace("[", "").replace("]", "") + "\n");
         }
     }
 
@@ -130,6 +160,21 @@ public class IOReadWrite {
         Float[] result = new Float[length];
         int destPos = 0;
         for (Float[] array : sources) {
+            System.arraycopy(array, 0, result, destPos, array.length);
+            destPos += array.length;
+        }
+        return result;
+    }
+
+    public static String[] concatArrays(String[]... sources) {
+
+        int length = 0;
+        for (String[] array : sources) {
+            length += array.length;
+        }
+        String[] result = new String[length];
+        int destPos = 0;
+        for (String[] array : sources) {
             System.arraycopy(array, 0, result, destPos, array.length);
             destPos += array.length;
         }
@@ -172,7 +217,7 @@ public class IOReadWrite {
                 text = IOReadWrite.removeUrl(text);
                 text = IOReadWrite.removePunct(text);
                 List<String> auxArray = extractWords(text.trim());
-                
+
                 for (int i = 0; i < auxArray.size() - 1; i++) {
                     if (map.containsKey(auxArray.get(i) + " " + auxArray.get(i + 1))) {
                         int frequency = map.get(auxArray.get(i) + " " + auxArray.get(i + 1));
@@ -183,7 +228,7 @@ public class IOReadWrite {
                     }
                 }
             }
-            
+
             map = sortByComparator(map, false);
             int i = 0;
             for (Map.Entry<String, Integer> entry : map.entrySet()) {
@@ -194,7 +239,7 @@ public class IOReadWrite {
                     break;
                 }
             }
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | SQLException | IOException ex) {
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | SQLException ex) {
             Logger.getLogger(IOReadWrite.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -233,18 +278,14 @@ public class IOReadWrite {
             map = sortByComparator(map, false);
             int i = 0;
             for (Map.Entry<String, Integer> entry : map.entrySet()) {
-                try {
-                    String key = entry.getKey();
-                    writeToFile(key, filepath);
-                    i++;
-                    if (i == 200) {
-                        break;
-                    }
-                } catch (IOException ex) {
-                    Logger.getLogger(IOReadWrite.class.getName()).log(Level.SEVERE, null, ex);
+                String key = entry.getKey();
+                writeToFile(key, filepath);
+                i++;
+                if (i == 200) {
+                    break;
                 }
             }
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | SQLException ex) {
+        } catch (SQLException | ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
             Logger.getLogger(IOReadWrite.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -265,15 +306,14 @@ public class IOReadWrite {
                 String text = rs.getString("text");
                 text = IOReadWrite.filterPost(text);
                 text = IOReadWrite.removeUrl(text);
+                text = removePunct(text);
 
                 text = removeFunctionWord(text);
                 List<String> auxArray = extractWords(text.trim());
                 //System.out.println(auxArray);
 
                 for (int i = 0; i < auxArray.size(); i++) {
-
                     if (map.containsKey(auxArray.get(i))) {
-
                         int frequency = map.get(auxArray.get(i));
                         frequency++;
                         map.put(auxArray.get(i), frequency);
@@ -286,15 +326,11 @@ public class IOReadWrite {
 
             int i = 0;
             for (Map.Entry<String, Integer> entry : map.entrySet()) {
-                try {
-                    String key = entry.getKey();
-                    writeToFile(key, filename);
-                    i++;
-                    if (i == 200) {
-                        break;
-                    }
-                } catch (IOException ex) {
-                    Logger.getLogger(IOReadWrite.class.getName()).log(Level.SEVERE, null, ex);
+                String key = entry.getKey();
+                writeToFile(key, filename);
+                i++;
+                if (i == 210) {
+                    break;
                 }
             }
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | SQLException ex) {

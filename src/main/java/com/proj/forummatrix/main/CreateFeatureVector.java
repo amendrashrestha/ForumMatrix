@@ -4,8 +4,10 @@ import com.proj.forummatrix.model.Database;
 import com.proj.forummatrix.utilities.AbstractThreadProcessor;
 import com.proj.forummatrix.utilities.BlogInfo;
 import com.proj.forummatrix.utilities.Blogger;
+import com.proj.forummatrix.utilities.IOProperties;
 import com.proj.forummatrix.utilities.IOReadWrite;
 import com.proj.forummatrix.utilities.Table;
+import java.io.File;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -31,7 +33,15 @@ public class CreateFeatureVector extends AbstractThreadProcessor<BlogInfo, Blogg
      */
     public static List<Float> createPostFeatureVectorForUser(String user, String tableName) {
         List<List<Float>> tempFvforUser = new ArrayList();
-        
+        String fileName = IOProperties.ENG_USER_FEATURE_VECTOR_FILE;
+        File fv_file = new File(fileName);
+
+        char[] characters = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'};
+        char[] digits_punc = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '?', '!', ',', ';', ':', '(', ')', '"', '-', '\''};
+
+        if (!fv_file.exists()) {
+            IOReadWrite.createFileWithHeader(fileName, characters, digits_punc);
+        }
 
         Database.getPosts(user, tableName, (String post) -> {
             List<Float> postFeatVector = new ArrayList();
@@ -44,11 +54,12 @@ public class CreateFeatureVector extends AbstractThreadProcessor<BlogInfo, Blogg
 
             List<Float> wordLength = PostAnalysis.countWordLengths(filteredPuncInPost, wordInPostSize);
             //English text feature vector
-            List<Float> characterLength = PostAnalysis.countCharactersAZ(removePunc, removePunc);
-            List<Float> specialCharacter = PostAnalysis.countEnglishSpecialCharacters(filteredPost, post);
+            List<Float> characterLength = PostAnalysis.countCharactersAZ(removePunc, removePunc, characters);
+            List<Float> specialCharacter = PostAnalysis.countEnglishSpecialCharacters(filteredPost, post, digits_punc);
+
             List<String> bigramWords = PostAnalysis.extractWordBigrams(filteredPost);
             List<String> bigramLetters = PostAnalysis.extractLetterBigrams(filteredPost);
-            
+
             List<Float> bigramWord = PostAnalysis.countbigramWords(bigramWords, wordInPostSize);
             List<Float> bigramLetter = PostAnalysis.countbigramLetters(bigramLetters, wordInPostSize);
             List<Float> mostFreqWord = PostAnalysis.countMostFreqWords(filteredPuncInPost, wordInPostSize);
@@ -77,9 +88,9 @@ public class CreateFeatureVector extends AbstractThreadProcessor<BlogInfo, Blogg
         return FVforUser;
     }
 
-    
     @Override
     public Blogger processInput(BlogInfo user, Table tableName) {
+
         List<Float> postFV = createPostFeatureVectorForUser(user.Blogger, tableName.Table);
         List<String> Feat_Vect = new ArrayList();
 

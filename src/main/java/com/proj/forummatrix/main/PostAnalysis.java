@@ -18,12 +18,9 @@ import java.util.List;
  */
 public class PostAnalysis {
 
-    static List<String> functionWords;
-    static List<String> emotionWords;
-    static List<String> bigramWords;
-    static List<String> bigramLetters;
-    static List<String> hashtagWords;
-    static List<String> mostFreqWords;
+    public static List<String> bigramWords;
+    public static List<String> bigramLetters;
+    public static List<String> mostFreqWords;
 
     public static void init(boolean flag, String tableName, String validUsersTable) {
         if (flag) {
@@ -234,11 +231,12 @@ public class PostAnalysis {
      *
      * @param post
      * @param realPost
+     * @param ch
      * @return
      */
-    public static List<Float> countCharactersAZ(String post, String realPost) {
+    public static List<Float> countCharactersAZ(String post, String realPost, char[] ch) {
         post = post.toLowerCase();	// Upper or lower case does not matter, so make all letters lower case first...
-        char[] ch = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'};
+        
         ArrayList<Float> tmpCounter = new ArrayList<>(Collections.nCopies(ch.length, 0.0f));
         for (int i = 0; i < ch.length; i++) {
             int value = countOccurrences(post, ch[i]);
@@ -259,11 +257,11 @@ public class PostAnalysis {
      *
      * @param post
      * @param realPost
+     * @param ch
      * @return
      */
-    public static List<Float> countEnglishSpecialCharacters(String post, String realPost) {
+    public static List<Float> countEnglishSpecialCharacters(String post, String realPost, char[] ch) {
         post = post.toLowerCase();	// Upper or lower case does not matter, so make all letters lower case first...
-        char[] ch = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '?', '!', ',', ';', ':', '(', ')', '"', '-', '\''};
         ArrayList<Float> tmpCounter = new ArrayList<>(Collections.nCopies(ch.length, 0.0f));
         for (int i = 0; i < ch.length; i++) {
             int value = countOccurrences(post, ch[i]);
