@@ -155,104 +155,150 @@ public class IOReadWrite {
         return tempTimeVector;
     }
 
-    public static void bigramWordFrequencies(String filepath, String text) {
-        HashMap<String, Integer> map = new HashMap<>();
-        List<String> auxArray = extractWords(text.trim());
+    public static void bigramWordFrequencies(String filepath, String tableName, String validUsersTable) {
+        try {
+            HashMap<String, Integer> map = new HashMap<>();
 
-        for (int i = 0; i < auxArray.size() - 1; i++) {
-            if (map.containsKey(auxArray.get(i) + " " + auxArray.get(i + 1))) {
-                int frequency = map.get(auxArray.get(i) + " " + auxArray.get(i + 1));
-                frequency++;
-                map.put(auxArray.get(i) + " " + auxArray.get(i + 1), frequency);
-            } else {
-                map.put(auxArray.get(i) + " " + auxArray.get(i + 1), 1);
+            Connection con = Connect.getConn();
+
+            Statement st = con.createStatement();
+            String sql = "Select text FROM " + tableName + " T1 "
+                    + "LEFT JOIN " + validUsersTable + " T2 "
+                    + "ON T1.User = T2.User";
+            ResultSet rs = st.executeQuery(sql);
+            while (rs.next()) {
+                String text = rs.getString("text");
+                text = IOReadWrite.filterPost(text);
+                text = IOReadWrite.removeUrl(text);
+                text = IOReadWrite.removePunct(text);
+                List<String> auxArray = extractWords(text.trim());
+                
+                for (int i = 0; i < auxArray.size() - 1; i++) {
+                    if (map.containsKey(auxArray.get(i) + " " + auxArray.get(i + 1))) {
+                        int frequency = map.get(auxArray.get(i) + " " + auxArray.get(i + 1));
+                        frequency++;
+                        map.put(auxArray.get(i) + " " + auxArray.get(i + 1), frequency);
+                    } else {
+                        map.put(auxArray.get(i) + " " + auxArray.get(i + 1), 1);
+                    }
+                }
             }
-        }
-
-        map = sortByComparator(map, false);
-
-        int i = 0;
-        for (Map.Entry<String, Integer> entry : map.entrySet()) {
-            try {
+            
+            map = sortByComparator(map, false);
+            int i = 0;
+            for (Map.Entry<String, Integer> entry : map.entrySet()) {
                 String key = entry.getKey();
                 writeToFile(key, filepath);
                 i++;
                 if (i == 200) {
                     break;
                 }
-            } catch (IOException ex) {
-                Logger.getLogger(IOReadWrite.class.getName()).log(Level.SEVERE, null, ex);
             }
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | SQLException | IOException ex) {
+            Logger.getLogger(IOReadWrite.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    public static void bigramLettterFrequency(String filepath, String text) {
-        HashMap<String, Integer> map = new HashMap<>();
+    public static void bigramLettterFrequency(String filepath, String tableName, String validUsersTable) {
+        try {
+            HashMap<String, Integer> map = new HashMap<>();
+            Connection con = Connect.getConn();
 
-        String finalText = text.replaceAll("\\s+", "");
-        finalText = removePunct(finalText);
-        char[] charArray = finalText.toCharArray();
+            Statement st = con.createStatement();
+            String sql = "Select text FROM " + tableName + " T1 "
+                    + "LEFT JOIN " + validUsersTable + " T2 "
+                    + "ON T1.User = T2.User";
+            ResultSet rs = st.executeQuery(sql);
 
-        for (int i = 0; i < charArray.length - 1; i++) {
-            if (map.containsKey(charArray[i] + "" + charArray[i + 1])) {
-                int frequency = map.get(charArray[i] + "" + charArray[i + 1]);
-                frequency++;
-                map.put(charArray[i] + "" + charArray[i + 1], frequency);
-            } else {
-                map.put(charArray[i] + "" + charArray[i + 1], 1);
-            }
-        }
+            while (rs.next()) {
+                String text = rs.getString("text");
+                text = IOReadWrite.filterPost(text);
+                text = IOReadWrite.removeUrl(text);
 
-        map = sortByComparator(map, false);
-        int i = 0;
-        for (Map.Entry<String, Integer> entry : map.entrySet()) {
-            try {
-                String key = entry.getKey();
-                writeToFile(key, filepath);
-                i++;
-                if (i == 200) {
-                    break;
+                String finalText = text.replaceAll("\\s+", "");
+                finalText = removePunct(finalText);
+                char[] charArray = finalText.toCharArray();
+
+                for (int i = 0; i < charArray.length - 1; i++) {
+                    if (map.containsKey(charArray[i] + "" + charArray[i + 1])) {
+                        int frequency = map.get(charArray[i] + "" + charArray[i + 1]);
+                        frequency++;
+                        map.put(charArray[i] + "" + charArray[i + 1], frequency);
+                    } else {
+                        map.put(charArray[i] + "" + charArray[i + 1], 1);
+                    }
                 }
-            } catch (IOException ex) {
-                Logger.getLogger(IOReadWrite.class.getName()).log(Level.SEVERE, null, ex);
             }
+
+            map = sortByComparator(map, false);
+            int i = 0;
+            for (Map.Entry<String, Integer> entry : map.entrySet()) {
+                try {
+                    String key = entry.getKey();
+                    writeToFile(key, filepath);
+                    i++;
+                    if (i == 200) {
+                        break;
+                    }
+                } catch (IOException ex) {
+                    Logger.getLogger(IOReadWrite.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | SQLException ex) {
+            Logger.getLogger(IOReadWrite.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    public static void wordsFrequencies(String filename, String text) {
+    public static void wordsFrequencies(String filename, String tableName, String validUsersTable) {
 
-        HashMap<String, Integer> map = new HashMap<>();
+        try {
+            HashMap<String, Integer> map = new HashMap<>();
+            Connection con = Connect.getConn();
 
-        text = removeFunctionWord(text);
-        List<String> auxArray = extractWords(text.trim());
-        //System.out.println(auxArray);
+            Statement st = con.createStatement();
+            String sql = "Select text FROM " + tableName + " T1 "
+                    + "LEFT JOIN " + validUsersTable + " T2 "
+                    + "ON T1.User = T2.User";
+            ResultSet rs = st.executeQuery(sql);
 
-        for (int i = 0; i < auxArray.size(); i++) {
+            while (rs.next()) {
+                String text = rs.getString("text");
+                text = IOReadWrite.filterPost(text);
+                text = IOReadWrite.removeUrl(text);
 
-            if (map.containsKey(auxArray.get(i))) {
+                text = removeFunctionWord(text);
+                List<String> auxArray = extractWords(text.trim());
+                //System.out.println(auxArray);
 
-                int frequency = map.get(auxArray.get(i));
-                frequency++;
-                map.put(auxArray.get(i), frequency);
-            } else {
-                map.put(auxArray.get(i), 1);
-            }
-        }
+                for (int i = 0; i < auxArray.size(); i++) {
 
-        map = sortByComparator(map, false);
+                    if (map.containsKey(auxArray.get(i))) {
 
-        int i = 0;
-        for (Map.Entry<String, Integer> entry : map.entrySet()) {
-            try {
-                String key = entry.getKey();
-                writeToFile(key, filename);
-                i++;
-                if (i == 200) {
-                    break;
+                        int frequency = map.get(auxArray.get(i));
+                        frequency++;
+                        map.put(auxArray.get(i), frequency);
+                    } else {
+                        map.put(auxArray.get(i), 1);
+                    }
                 }
-            } catch (IOException ex) {
-                Logger.getLogger(IOReadWrite.class.getName()).log(Level.SEVERE, null, ex);
             }
+            map = sortByComparator(map, false);
+
+            int i = 0;
+            for (Map.Entry<String, Integer> entry : map.entrySet()) {
+                try {
+                    String key = entry.getKey();
+                    writeToFile(key, filename);
+                    i++;
+                    if (i == 200) {
+                        break;
+                    }
+                } catch (IOException ex) {
+                    Logger.getLogger(IOReadWrite.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | SQLException ex) {
+            Logger.getLogger(IOReadWrite.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 

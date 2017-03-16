@@ -1,6 +1,5 @@
 package com.proj.forummatrix.main;
 
-import com.proj.forummatrix.model.Connect;
 import com.proj.forummatrix.utilities.IOProperties;
 import com.proj.forummatrix.utilities.IOReadWrite;
 import static com.proj.forummatrix.utilities.IOReadWrite.extractWords;
@@ -9,18 +8,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.StringTokenizer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  *
@@ -37,49 +27,30 @@ public class PostAnalysis {
 
     public static void init(boolean flag, String tableName, String validUsersTable) {
         if (flag) {
-            try {
-                File wordBigramFile = new File(IOProperties.ENG_WORD_BIGRAM_FILEPATH);
-                File letterBigramFile = new File(IOProperties.ENG_LETTER_BIGRAM_FILEPATH);
-                File mostFreqWordFile = new File(IOProperties.ENG_MOST_FREQ_WORD_FILEPATH);
 
-                Connection con = Connect.getConn();
+            File wordBigramFile = new File(IOProperties.ENG_WORD_BIGRAM_FILEPATH);
+            File letterBigramFile = new File(IOProperties.ENG_LETTER_BIGRAM_FILEPATH);
+            File mostFreqWordFile = new File(IOProperties.ENG_MOST_FREQ_WORD_FILEPATH);
 
-                Statement st = con.createStatement();
-                String sql = "Select text FROM " + tableName + " T1 "
-                        + "LEFT JOIN " + validUsersTable + " T2 "
-                        + "ON T1.User = T2.User";
-                ResultSet rs = st.executeQuery(sql);
-                while (rs.next()) {
-                    String text = rs.getString("text");
-                    text = text.toLowerCase();
-                    //String text = "Anbar province the western province of Iraq is now fully under #ISIS control #AllEyesOnISIS";
-
-                    text = IOReadWrite.filterPost(text);
-                    text = IOReadWrite.removeUrl(text);
-                    text = IOReadWrite.removePunct(text);
-
-                    if (!wordBigramFile.exists()) {
-                        System.out.println("Running Word Bigram.....");
-                        IOReadWrite.bigramWordFrequencies(IOProperties.ENG_WORD_BIGRAM_FILEPATH, text);
-                    }
-                    if (!letterBigramFile.exists()) {
-                        System.out.println("Running LetterBigram.....");
-                        IOReadWrite.bigramLettterFrequency(IOProperties.ENG_LETTER_BIGRAM_FILEPATH, text);
-                    }
-
-                    if (!mostFreqWordFile.exists()) {
-                        System.out.println("Running Most frequent word.....");
-                        IOReadWrite.wordsFrequencies(IOProperties.ENG_MOST_FREQ_WORD_FILEPATH, text);
-                    }
-
-                    //data dependent feature
-                    loadBigramWords(IOProperties.ENG_WORD_BIGRAM_FILEPATH);
-                    loadBigramLetter(IOProperties.ENG_LETTER_BIGRAM_FILEPATH);
-                    loadMostFreqWords(IOProperties.ENG_MOST_FREQ_WORD_FILEPATH);
-                }
-            } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | SQLException ex) {
-                Logger.getLogger(PostAnalysis.class.getName()).log(Level.SEVERE, null, ex);
+            if (!wordBigramFile.exists()) {
+                System.out.println("Running Word Bigram.....");
+                IOReadWrite.bigramWordFrequencies(IOProperties.ENG_WORD_BIGRAM_FILEPATH, tableName, validUsersTable);
             }
+            if (!letterBigramFile.exists()) {
+                System.out.println("Running LetterBigram.....");
+                IOReadWrite.bigramLettterFrequency(IOProperties.ENG_LETTER_BIGRAM_FILEPATH, tableName, validUsersTable);
+            }
+
+            if (!mostFreqWordFile.exists()) {
+                System.out.println("Running Most frequent word.....");
+                IOReadWrite.wordsFrequencies(IOProperties.ENG_MOST_FREQ_WORD_FILEPATH, tableName, validUsersTable);
+            }
+
+            //data dependent feature
+            loadBigramWords(IOProperties.ENG_WORD_BIGRAM_FILEPATH);
+            loadBigramLetter(IOProperties.ENG_LETTER_BIGRAM_FILEPATH);
+            loadMostFreqWords(IOProperties.ENG_MOST_FREQ_WORD_FILEPATH);
+
         } else {
             loadBigramWords(IOProperties.ENG_WORD_BIGRAM_FILEPATH);
             loadBigramLetter(IOProperties.ENG_LETTER_BIGRAM_FILEPATH);
