@@ -2,8 +2,6 @@ package com.proj.forummatrix.utilities;
 
 import com.proj.forummatrix.main.PostAnalysis;
 import com.proj.forummatrix.model.Connect;
-import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -14,7 +12,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -23,6 +20,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.StringTokenizer;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -36,6 +36,7 @@ import org.apache.commons.lang.StringEscapeUtils;
 public class IOReadWrite {
 
     private static final Pattern UNDESIRABLES = Pattern.compile("[](){},.…”:;؛،؟!?<>%\\/\"\\[]");
+    static ArrayList<String> funcWordList = loadLiwcWord(IOProperties.LIWC_ENGLISH_WORD_FILEPATH, "Function");
 
     public static String[] getAllFiles(String basePath) {
         FileDirectoryHandler handle = new FileDirectoryHandler();
@@ -215,7 +216,7 @@ public class IOReadWrite {
                 String text = rs.getString("text");
                 text = IOReadWrite.filterPost(text);
                 text = IOReadWrite.removeUrl(text);
-                text = IOReadWrite.removePunct(text);
+                text = IOReadWrite.removePunct(text).toLowerCase();
                 List<String> auxArray = extractWords(text.trim());
 
                 for (int i = 0; i < auxArray.size() - 1; i++) {
@@ -235,7 +236,7 @@ public class IOReadWrite {
                 String key = entry.getKey();
                 writeToFile(key, filepath);
                 i++;
-                if (i == 200) {
+                if (i == 210) {
                     break;
                 }
             }
@@ -258,7 +259,7 @@ public class IOReadWrite {
             while (rs.next()) {
                 String text = rs.getString("text");
                 text = IOReadWrite.filterPost(text);
-                text = IOReadWrite.removeUrl(text);
+                text = IOReadWrite.removeUrl(text).toLowerCase();
 
                 String finalText = text.replaceAll("\\s+", "");
                 finalText = removePunct(finalText);
@@ -281,7 +282,7 @@ public class IOReadWrite {
                 String key = entry.getKey();
                 writeToFile(key, filepath);
                 i++;
-                if (i == 200) {
+                if (i == 210) {
                     break;
                 }
             }
@@ -291,7 +292,6 @@ public class IOReadWrite {
     }
 
     public static void wordsFrequencies(String filename, String tableName, String validUsersTable) {
-
         try {
             HashMap<String, Integer> map = new HashMap<>();
             Connection con = Connect.getConn();
@@ -306,11 +306,12 @@ public class IOReadWrite {
                 String text = rs.getString("text");
                 text = IOReadWrite.filterPost(text);
                 text = IOReadWrite.removeUrl(text);
-                text = removePunct(text);
+                text = removePunct(text).toLowerCase();
 
-                text = removeFunctionWord(text);
-                List<String> auxArray = extractWords(text.trim());
-                //System.out.println(auxArray);
+                text = removeFunctionWord(text);     
+
+                List<String> auxArray = extractWords(text);
+//                System.out.println(auxArray);
 
                 for (int i = 0; i < auxArray.size(); i++) {
                     if (map.containsKey(auxArray.get(i))) {
@@ -322,6 +323,7 @@ public class IOReadWrite {
                     }
                 }
             }
+
             map = sortByComparator(map, false);
 
             int i = 0;
@@ -329,7 +331,7 @@ public class IOReadWrite {
                 String key = entry.getKey();
                 writeToFile(key, filename);
                 i++;
-                if (i == 210) {
+                if (i == 230) {
                     break;
                 }
             }
@@ -367,7 +369,7 @@ public class IOReadWrite {
     }
 
     public static String removeFunctionWord(String text) {
-        ArrayList<String> funcWordList = loadLiwcWord(IOProperties.LIWC_ENGLISH_WORD_FILEPATH, "Function");
+//        ArrayList<String> funcWordList = loadLiwcWord(IOProperties.LIWC_ENGLISH_WORD_FILEPATH, "Function");
         Pattern p;
         for (String single_Func_Word : funcWordList) {
             if (single_Func_Word.contains("*")) {
@@ -454,6 +456,7 @@ public class IOReadWrite {
     }
 
     public static String filterPost(String post) {
+        post = removeUrl(post);
         post = StringEscapeUtils.unescapeHtml(post);
         return post;
     }

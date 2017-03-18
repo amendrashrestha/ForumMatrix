@@ -11,10 +11,9 @@ public class main {
 
     public static void init() {
         String forum = "vnnforum";
-        boolean flag = true;
+        boolean flag = false;
         String tableName = "tbl_" + forum + "_posts_user_day";
         String validUsers = "tbl_" + forum + "_valid_user";
-        String forumCountTable = "tbl_count_" + forum;
 
         Table table = new Table();
         table.setTable(tableName);
@@ -26,7 +25,7 @@ public class main {
         //for trump users
 //        threadStart.startProcessing(Database.getUsers(validUsers), table);
         //for other users
-//        threadStart.startProcessing(Database.getOtherUsers(validUsers), table);
+        threadStart.startProcessing(Database.getOtherUsers(validUsers), table);
     }
 
     public static void main(String args[]) {

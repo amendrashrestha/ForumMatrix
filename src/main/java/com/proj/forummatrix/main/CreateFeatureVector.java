@@ -44,34 +44,45 @@ public class CreateFeatureVector extends AbstractThreadProcessor<BlogInfo, Blogg
         }
 
         Database.getPosts(user, tableName, (String post) -> {
-            List<Float> postFeatVector = new ArrayList();
+//            System.out.println(user);
+//            System.out.println(tempFvforUser);
+            if (!post.isEmpty()) {
+                List<Float> postFeatVector = new ArrayList();
 
-            String filteredPost = IOReadWrite.filterPost(post);
-            String removePunc = IOReadWrite.removePunct(filteredPost);
-            List<String> filteredWordInPost = IOReadWrite.extractWords(filteredPost);
-            List<String> filteredPuncInPost = IOReadWrite.extractWords(removePunc);
-            int wordInPostSize = filteredWordInPost.size();
+                String filteredPost = IOReadWrite.filterPost(post);
+                String removePunc = IOReadWrite.removePunct(filteredPost);
 
-            List<Float> wordLength = PostAnalysis.countWordLengths(filteredPuncInPost, wordInPostSize);
-            //English text feature vector
-            List<Float> characterLength = PostAnalysis.countCharactersAZ(removePunc, removePunc, characters);
-            List<Float> specialCharacter = PostAnalysis.countEnglishSpecialCharacters(filteredPost, post, digits_punc);
+                List<String> filteredWordInPost = IOReadWrite.extractWords(filteredPost);
+                List<String> filteredPuncInPost = IOReadWrite.extractWords(removePunc);
+                int wordInPostSize = filteredWordInPost.size();
+                
+                if (filteredPost.length() > 1 && removePunc.length() > 1 && wordInPostSize > 1) {
+//                    System.out.println(wordInPostSize);
+                    List<Float> wordLength = PostAnalysis.countWordLengths(filteredPuncInPost, wordInPostSize);
+//                    System.out.println(wordLength);
+                    //English text feature vector
+                    List<Float> characterLength = PostAnalysis.countCharactersAZ(removePunc, filteredPost, characters);
+//                System.out.println(characterLength);
+                    List<Float> specialCharacter = PostAnalysis.countEnglishSpecialCharacters(filteredPost, post, digits_punc);
 
-            List<String> bigramWords = PostAnalysis.extractWordBigrams(filteredPost);
-            List<String> bigramLetters = PostAnalysis.extractLetterBigrams(filteredPost);
+                    List<String> bigramWords = PostAnalysis.extractWordBigrams(filteredPost);
+                    List<String> bigramLetters = PostAnalysis.extractLetterBigrams(filteredPost);
 
-            List<Float> bigramWord = PostAnalysis.countbigramWords(bigramWords, wordInPostSize);
-            List<Float> bigramLetter = PostAnalysis.countbigramLetters(bigramLetters, wordInPostSize);
-            List<Float> mostFreqWord = PostAnalysis.countMostFreqWords(filteredPuncInPost, wordInPostSize);
+                    List<Float> bigramWord = PostAnalysis.countbigramWords(bigramWords, wordInPostSize);
+                    List<Float> bigramLetter = PostAnalysis.countbigramLetters(bigramLetters, wordInPostSize);
+                    List<Float> mostFreqWord = PostAnalysis.countMostFreqWords(filteredPuncInPost, wordInPostSize);
 
-            postFeatVector.addAll(wordLength);
-            postFeatVector.addAll(characterLength);
-            postFeatVector.addAll(specialCharacter);
-            postFeatVector.addAll(bigramWord);
-            postFeatVector.addAll(bigramLetter);
-            postFeatVector.addAll(mostFreqWord);
+                    postFeatVector.addAll(wordLength);
+                    postFeatVector.addAll(characterLength);
+                    postFeatVector.addAll(specialCharacter);
+                    postFeatVector.addAll(bigramWord);
+                    postFeatVector.addAll(bigramLetter);
+                    postFeatVector.addAll(mostFreqWord);
 
-            tempFvforUser.add(postFeatVector);
+                    tempFvforUser.add(postFeatVector);
+//                    System.out.println(tempFvforUser.size());
+                }
+            }
         });
 
         int nrOfFeatures = tempFvforUser.get(0).size();
@@ -103,7 +114,7 @@ public class CreateFeatureVector extends AbstractThreadProcessor<BlogInfo, Blogg
         String radical = "1";
         String nonradical = "0";
 
-        Blogger toWriteIntoFile = new Blogger(Feat_Vect, radical);
+        Blogger toWriteIntoFile = new Blogger(Feat_Vect, nonradical);
         return toWriteIntoFile;
     }
 
