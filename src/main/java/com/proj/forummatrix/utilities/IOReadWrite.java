@@ -20,9 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.StringTokenizer;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -209,7 +206,7 @@ public class IOReadWrite {
 
             Statement st = con.createStatement();
             String sql = "Select text FROM " + tableName + " T1 "
-                    + "LEFT JOIN " + validUsersTable + " T2 "
+                    + "INNER JOIN " + validUsersTable + " T2 "
                     + "ON T1.User = T2.User";
             ResultSet rs = st.executeQuery(sql);
             while (rs.next()) {
@@ -236,7 +233,7 @@ public class IOReadWrite {
                 String key = entry.getKey();
                 writeToFile(key, filepath);
                 i++;
-                if (i == 210) {
+                if (i == 230) {
                     break;
                 }
             }
@@ -252,7 +249,7 @@ public class IOReadWrite {
 
             Statement st = con.createStatement();
             String sql = "Select text FROM " + tableName + " T1 "
-                    + "LEFT JOIN " + validUsersTable + " T2 "
+                    + "INNER JOIN " + validUsersTable + " T2 "
                     + "ON T1.User = T2.User";
             ResultSet rs = st.executeQuery(sql);
 
@@ -282,7 +279,7 @@ public class IOReadWrite {
                 String key = entry.getKey();
                 writeToFile(key, filepath);
                 i++;
-                if (i == 210) {
+                if (i == 230) {
                     break;
                 }
             }
@@ -298,7 +295,7 @@ public class IOReadWrite {
 
             Statement st = con.createStatement();
             String sql = "Select text FROM " + tableName + " T1 "
-                    + "LEFT JOIN " + validUsersTable + " T2 "
+                    + "INNER JOIN " + validUsersTable + " T2 "
                     + "ON T1.User = T2.User";
             ResultSet rs = st.executeQuery(sql);
 
@@ -464,6 +461,7 @@ public class IOReadWrite {
     public static String removePunct(String x) {
         x = UNDESIRABLES.matcher(x).replaceAll("");
         x = x.replace("\\", "");
+        x = x.replace("-", "").replace("", "");
         return x;
     }
 

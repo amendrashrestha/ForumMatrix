@@ -11,7 +11,7 @@ public class main {
 
     public static void init() {
         String forum = "vnnforum";
-        boolean flag = false;
+        boolean flag = true;
         String tableName = "tbl_" + forum + "_posts_user_day";
         String validUsers = "tbl_" + forum + "_valid_user";
 
@@ -20,12 +20,12 @@ public class main {
         
         CreateFeatureVector threadStart = new CreateFeatureVector();
 
-        PostAnalysis.init(flag, tableName, validUsers);
+        PostAnalysis.init(flag, tableName, validUsers); 
 
         //for trump users
 //        threadStart.startProcessing(Database.getUsers(validUsers), table);
         //for other users
-        threadStart.startProcessing(Database.getOtherUsers(validUsers), table);
+//        threadStart.startProcessing(Database.getOtherUsers(validUsers), table);
     }
 
     public static void main(String args[]) {
